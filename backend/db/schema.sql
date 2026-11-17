@@ -1,0 +1,1 @@
+SELECT id, nome, valore * 10 AS valore_crediti FROM piloti;
