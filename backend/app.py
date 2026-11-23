@@ -25,3 +25,40 @@ def lista_piloti():
     cur.close(); conn.close()
     piloti = [riga_to_dict(r) for r in righe]
     return jsonify(piloti), 200
+
+
+# dettaglio: parametro nell'URL
+@app.get("/api/piloti/<int:id>")
+def dettaglio(id):
+    conn = get_conn(); cur = conn.cursor()
+    cur.execute("SELECT id, nome, valore, "
+                "valore * 10 AS valore_crediti "
+                "FROM piloti WHERE id = %s", (id,))
+    r = cur.fetchone()
+    cur.close(); conn.close()
+    if r is None:
+        return jsonify({"errore": "non trovato"}), 404
+    return jsonify(riga_to_dict(r)), 200
+
+# nuova iscrizione: i dati arrivano nel BODY
+# {"utente": "Rossi", "totale": 525.00, "piloti": [1, 4]}
+@app.post("/api/iscrizioni")
+def crea_iscrizione():
+    dati = request.get_json()        # JSON → dizionario
+    conn = get_conn(); cur = conn.cursor()
+    cur.execute("INSERT INTO iscrizioni (utente, totale) "
+                "VALUES (%s, %s)",
+                (dati["utente"], dati["totale"]))
+    nuovo_id = cur.lastrowid         # id appena creato
+    for pid in dati["piloti"]:      # una riga per pilota
+        cur.execute("INSERT INTO righe_iscrizione "
+                    "(iscrizione_id, pilota_id) VALUES (%s, %s)",
+                    (nuovo_id, pid))
+    conn.commit()                    # salva tutto insieme
+    cur.close(); conn.close()
+    return jsonify({"id": nuovo_id}), 201
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
