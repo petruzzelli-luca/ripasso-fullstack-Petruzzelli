@@ -1,12 +1,18 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { PilotaService } from './services/pilota-service';
 
 @Component({
-  imports: [RouterOutlet],
   selector: 'app-root',
-  styleUrl: './app.css',
+  imports: [RouterOutlet],
   templateUrl: './app.html',
+  styleUrl: './app.css'
 })
 export class App {
-  protected readonly title = signal('frontend');
+  constructor() {
+    inject(PilotaService).getPiloti().subscribe({
+      next:  dati => console.log('B', dati.length),
+      error: err  => console.log('Errore', err.status)
+    });
+  }
 }
